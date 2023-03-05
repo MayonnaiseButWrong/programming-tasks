@@ -133,14 +133,12 @@ class Dastan:
             self.__DisplayState()
             SquareIsValid = False
             Choice = 0
+            previosState=self._CurrentPlayer.GetScore()
             while Choice < 1 or Choice > 3:
                 Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
                 if Choice == 9:
                     self.__UseMoveOptionOffer()
                     self.__DisplayState()
-                elif Choice == 8 and self._CurrentPlayer.getSahmUsed() is False:
-                    self.__UseSahm()
-                    self._CurrentPlayer.UpdateSahm()
             while not SquareIsValid:
                 StartSquareReference = self.__GetSquareReference("containing the piece to move")
                 SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
@@ -156,11 +154,17 @@ class Dastan:
                 self.__UpdateBoard(StartSquareReference, FinishSquareReference)
                 self.__UpdatePlayerScore(PointsForPieceCapture)
                 print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
-            if self._CurrentPlayer.SameAs(self._Players[0]):
-                self._CurrentPlayer = self._Players[1]
+            redoMove=str(input('Would You like To Undo Your Move (y/n)? : '))
+            if redoMove=='y':
+                changeInScore=int(previosState-self._CurrentPlayer.GetScore())
+                self.__UpdatePlayerScore(changeInScore)
+                self.__UpdateBoard(FinishSquareReference, StartSquareReference)
             else:
-                self._CurrentPlayer = self._Players[0]
-            GameOver = self.__CheckIfGameOver()
+                if self._CurrentPlayer.SameAs(self._Players[0]):
+                    self._CurrentPlayer = self._Players[1]
+                else:
+                    self._CurrentPlayer = self._Players[0]
+                GameOver = self.__CheckIfGameOver()
         self.__DisplayState()
         self.__DisplayFinalResult()
 
@@ -406,6 +410,10 @@ class MoveOptionQueue:
     def __init__(self):
         self.__Queue = []
 
+    def ResetQueueBack(self,Position):
+        temp=self.__Queue[-1]
+        self.__Queue[Position]=temp
+    
     def GetQueueAsString(self):
         QueueAsString = ""
         Count = 1
@@ -434,7 +442,10 @@ class Player:
         self.__Name = N
         self.__Direction = D
         self.__Queue = MoveOptionQueue()
-        self.__SahmUsed = False
+
+    def ResetQueueBackAfterUndo(self,Position):
+        self.__Queue.ResetQueueBack(Position)
+        
 
     def SameAs(self, APlayer):
         if APlayer is None:
@@ -443,12 +454,6 @@ class Player:
             return True
         else:
             return False
-        
-    def getSahmUsed(self):
-        return self.__SahmUsed
-    
-    def UpdateSahm(self):
-        self.__SahmUsed=False
 
     def GetPlayerStateAsString(self):
         return self.__Name + "\n" + "Score: " + str(self.__Score) + "\n" + "Move option queue: " + self.__Queue.GetQueueAsString() + "\n"
