@@ -9,7 +9,7 @@ def updateInventory(arr1, arr2):
             arr1.append(arr2[b])  
     return arr1
     
-curInv=[
+curInv=[    #?
     [21, "Bowling Ball"],
     [2, "Dirty Sock"],
     [1, "Hair Pin"],
@@ -22,4 +22,7 @@ newInv=newInv = [
     [7, "Toothpaste"]
 ]
 
-print(updateInventory(curInv, newInv))
+newInv  
+
+#print(updateInventory(curInv, newInv))
+print(updateInventory([[21, "Bowling Ball"], [2, "Dirty Sock"], [1, "Hair Pin"], [5, "Microphone"]], []))
