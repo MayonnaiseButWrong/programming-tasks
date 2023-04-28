@@ -127,6 +127,19 @@ class Dastan:
             return self._Board[self.__GetIndexOfSquare(FinishSquareReference)].GetPieceInSquare().GetPointsIfCaptured()
         return 0
 
+    def __calculateSahmMove(self,StartSquareReference):
+        y=StartSquareReference//10
+        x=StartSquareReference%10
+        score = 0
+        while y<6 and y>0:
+            y += -1 * self._CurrentPlayer.GetDirection()
+            print(x+y*10)
+            BoardSquare = self._Board[self.__GetIndexOfSquare(x+y*10)]
+            if BoardSquare.GetPieceInSquare() is not None and BoardSquare.ContainsKotla() is False:
+                score += self.__CalculatePieceCapturePoints(x+y*10)
+                BoardSquare.RemovePiece()
+        return score
+    
     def PlayGame(self):
         GameOver = False
         while not GameOver:
@@ -138,24 +151,32 @@ class Dastan:
                 if Choice == 9:
                     self.__UseMoveOptionOffer()
                     self.__DisplayState()
-                elif Choice == 8 and self._CurrentPlayer.getSahmUsed() is False:
-                    self.__UseSahm()
-                    self._CurrentPlayer.UpdateSahm()
-            while not SquareIsValid:
+                elif Choice == 8:
+                    if self._CurrentPlayer.getSahmUsed() is False:
+                        break
+                    else:
+                        print('you have already used your sahm')
+            if Choice==8:
+                self._CurrentPlayer.UpdateSahm()
                 StartSquareReference = self.__GetSquareReference("containing the piece to move")
                 SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
-            SquareIsValid = False
-            while not SquareIsValid:
-                FinishSquareReference = self.__GetSquareReference("to move to")
-                SquareIsValid = self.__CheckSquareIsValid(FinishSquareReference, False)
-            MoveLegal = self._CurrentPlayer.CheckPlayerMove(Choice, StartSquareReference, FinishSquareReference)
-            if MoveLegal:
-                PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
-                self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
-                self._CurrentPlayer.UpdateQueueAfterMove(Choice)
-                self.__UpdateBoard(StartSquareReference, FinishSquareReference)
-                self.__UpdatePlayerScore(PointsForPieceCapture)
-                print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
+                self._CurrentPlayer.ChangeScore(self.__calculateSahmMove(StartSquareReference))
+            else:
+                while not SquareIsValid:
+                    StartSquareReference = self.__GetSquareReference("containing the piece to move")
+                    SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
+                SquareIsValid = False
+                while not SquareIsValid:
+                    FinishSquareReference = self.__GetSquareReference("to move to")
+                    SquareIsValid = self.__CheckSquareIsValid(FinishSquareReference, False)
+                MoveLegal = self._CurrentPlayer.CheckPlayerMove(Choice, StartSquareReference, FinishSquareReference)
+                if MoveLegal:
+                    PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
+                    self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
+                    self._CurrentPlayer.UpdateQueueAfterMove(Choice)
+                    self.__UpdateBoard(StartSquareReference, FinishSquareReference)
+                    self.__UpdatePlayerScore(PointsForPieceCapture)
+                    print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
             if self._CurrentPlayer.SameAs(self._Players[0]):
                 self._CurrentPlayer = self._Players[1]
             else:
