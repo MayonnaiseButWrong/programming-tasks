@@ -1,25 +1,24 @@
-def updateInventory(arr1, arr2):
-    for a in range(len(arr2)):
-        flag=False
-        for b in range(len(arr1)):
-            if arr2[a][1]==arr1[b][1]:
-                arr1[b][0]+=arr2[a][0]
-                flag=True
-        if flag==False:
-            arr1.append(arr2[b])  
-    return arr1
-    
-curInv=[
-    [21, "Bowling Ball"],
-    [2, "Dirty Sock"],
-    [1, "Hair Pin"],
-    [5, "Microphone"]
-]
-newInv=newInv = [
-    [2, "Hair Pin"],
-    [3, "Half-Eaten Apple"],
-    [67, "Bowling Ball"],
-    [7, "Toothpaste"]
-]
+def sym(*args):
+    c=args[0]
+    for i in range(1,len(args)):
+        a,b,c=c,args[i],[]
+        for element in a:
+            if not element in b and not element in c:
+                for j in range(len(c)):
+                    if element<c[j]:
+                        c=c[:j]+[element]+c[j:]
+                        break
+                else:
+                    c.append(element)
+        for element in b:
+            if not element in a and not element in c:
+                for j in range(len(c)):
+                    if element<c[j]:
+                        c=c[:j]+[element]+c[j:]
+                        break
+                else:
+                    c.append(element)
+    return c
 
-print(updateInventory(curInv, newInv))
+print(sym([3, 3, 3, 2, 5], [2, 1, 5, 7], [3, 4, 6, 6], [1, 2, 3], [5, 3, 9, 8], [1]))
+        
