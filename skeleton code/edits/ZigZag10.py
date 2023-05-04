@@ -95,14 +95,12 @@ class Dastan:
         for S in self._Board:
             PieceInSquare = S.GetPieceInSquare()
             if PieceInSquare is not None:
-                print(S.ContainsKotla(),S.GetPieceInSquare(),S.)
                 if S.ContainsKotla() and PieceInSquare.GetTypeOfPiece() == "mirza" and not PieceInSquare.GetBelongsTo().SameAs(S.GetBelongsTo()):
                     return True
-                elif not S.ContainsKotla():
-                    if PieceInSquare.GetTypeOfPiece() == "mirza" and PieceInSquare.GetBelongsTo().SameAs(self._Players[0]):
-                        Player1HasMirza = True
-                    elif PieceInSquare.GetTypeOfPiece() == "mirza" and PieceInSquare.GetBelongsTo().SameAs(self._Players[1]):
-                        Player2HasMirza = True
+                elif PieceInSquare.GetTypeOfPiece() == "mirza" and PieceInSquare.GetBelongsTo().SameAs(self._Players[0]):
+                    Player1HasMirza = True
+                elif PieceInSquare.GetTypeOfPiece() == "mirza" and PieceInSquare.GetBelongsTo().SameAs(self._Players[1]):
+                    Player2HasMirza = True
         return not (Player1HasMirza and Player2HasMirza)
 
     def __GetSquareReference(self, Description):
@@ -175,7 +173,7 @@ class Dastan:
         else:
             modifier='K'
         self._Board[self.__GetIndexOfSquare(square)].RemovePiece()
-        self._Board[self.__GetIndexOfSquare(square)].SetPiece(Kotla(self._CurrentPlayer, modifier))
+        self._Board[self.__GetIndexOfSquare(square)] = Kotla(self._CurrentPlayer, modifier)
     
     def __DisplayFinalResult(self):
         if self._Players[0].GetScore() == self._Players[1].GetScore():
