@@ -4,7 +4,6 @@
 #developed in the Python 3.9 programming environment
 
 import random
-import copy
 
 class Dastan:
     def __init__(self, R, C, NoOfPieces):
@@ -132,36 +131,42 @@ class Dastan:
         GameOver = False
         while not GameOver:
             self.__DisplayState()
-            Reset=True
-            while Reset:
-                Choice = 0
-                SquareIsValid = False
-                while Choice < 1 or Choice > 3:
-                    Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
-                    if Choice == 9:
-                        self.__UseMoveOptionOffer()
-                        self.__DisplayState()
-                while not SquareIsValid:
-                    StartSquareReference = self.__GetSquareReference("containing the piece to move")
-                    SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
+            SquareIsValid = False
+            Choice = 0
+            while Choice < 1 or Choice > 3:
+                Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer or 7 to select a pieces to destroy and replace with a second Kotla: "))
+                if Choice == 9:
+                    self.__UseMoveOptionOffer()
+                    self.__DisplayState()
+                elif Choice == 7:
+                    if self._CurrentPlayer.GetReplacedWithKotla():
+                        print('you have already done this')
+                    else:
+                        break
+            while not SquareIsValid:
+                StartSquareReference = self.__GetSquareReference("containing the piece to move")
+                SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
+            if Choice==7:
+                if self._CurrentPlayer.SameAs(self._Players[0]):
+                    piece=Kotla(self._Players[0], "K")
+                else:
+                    piece=Kotla(self._Players[1], "k")
+                self._Board[self.__GetIndexOfSquare(StartSquareReference)].RemovePiece()
+                self._Board[self.__GetIndexOfSquare(StartSquareReference)]=piece
+                self._CurrentPlayer.SetReplacedWithKotla(True)
+            else:
                 SquareIsValid = False
                 while not SquareIsValid:
                     FinishSquareReference = self.__GetSquareReference("to move to")
                     SquareIsValid = self.__CheckSquareIsValid(FinishSquareReference, False)
                 MoveLegal = self._CurrentPlayer.CheckPlayerMove(Choice, StartSquareReference, FinishSquareReference)
-                YN=str(input('Do you want to confim this move? (y/n): '))
-                if YN.lower()=='y':
-                    Reset=False
-                if Reset:
-                    self._CurrentPlayer.ResetQueueBackAfterUndo()
-                    
-            if MoveLegal:
-                PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
-                self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
-                self._CurrentPlayer.UpdateQueueAfterMove(Choice)
-                self.__UpdateBoard(StartSquareReference, FinishSquareReference)
-                self.__UpdatePlayerScore(PointsForPieceCapture)
-                print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
+                if MoveLegal:
+                    PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
+                    self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
+                    self._CurrentPlayer.UpdateQueueAfterMove(Choice)
+                    self.__UpdateBoard(StartSquareReference, FinishSquareReference)
+                    self.__UpdatePlayerScore(PointsForPieceCapture)
+                    print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
             if self._CurrentPlayer.SameAs(self._Players[0]):
                 self._CurrentPlayer = self._Players[1]
             else:
@@ -411,7 +416,6 @@ class Move:
 class MoveOptionQueue:
     def __init__(self):
         self.__Queue = []
-        self.__PreviosQueue = []
 
     def GetQueueAsString(self):
         QueueAsString = ""
@@ -422,21 +426,15 @@ class MoveOptionQueue:
         return QueueAsString
 
     def Add(self, NewMoveOption):
-        self.__PreviosQueue=copy.deepcopy(self.__Queue)
         self.__Queue.append(NewMoveOption)
 
     def Replace(self, Position, NewMoveOption):
-        self.__PreviosQueue=copy.deepcopy(self.__Queue)
         self.__Queue[Position] = NewMoveOption
 
     def MoveItemToBack(self, Position):
-        self.__PreviosQueue=copy.deepcopy(self.__Queue)
         Temp = self.__Queue[Position]
         self.__Queue.pop(Position)
         self.__Queue.append(Temp)
-        
-    def ResetQueueBack(self):
-        self.__Queue=copy.deepcopy(self.__PreviosQueue)
 
     def GetMoveOptionInPosition(self, Pos):
         return self.__Queue[Pos]
@@ -447,6 +445,7 @@ class Player:
         self.__Name = N
         self.__Direction = D
         self.__Queue = MoveOptionQueue()
+        self.__ReplacedWithKotla = False
 
     def SameAs(self, APlayer):
         if APlayer is None:
@@ -468,8 +467,11 @@ class Player:
     def UpdateMoveOptionQueueWithOffer(self, Position, NewMoveOption):
         self.__Queue.Replace(Position, NewMoveOption)
 
-    def ResetQueueBackAfterUndo(self):
-        self.__Queue.ResetQueueBack()
+    def GetReplacedWithKotla(self):
+        return self.__ReplacedWithKotla
+    
+    def SetReplacedWithKotla(self,v):
+        self.__ReplacedWithKotla=v
     
     def GetScore(self):
         return self.__Score

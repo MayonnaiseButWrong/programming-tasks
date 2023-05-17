@@ -4,7 +4,6 @@
 #developed in the Python 3.9 programming environment
 
 import random
-import copy
 
 class Dastan:
     def __init__(self, R, C, NoOfPieces):
@@ -128,40 +127,52 @@ class Dastan:
             return self._Board[self.__GetIndexOfSquare(FinishSquareReference)].GetPieceInSquare().GetPointsIfCaptured()
         return 0
 
+    def __CalculateSahmMove(self,StartSquareReference):
+        reference=StartSquareReference+10*self._CurrentPlayer.GetDirection()
+        while reference//10<6 and reference>0:
+            print(reference)
+            self.__CheckSquareIsValid(reference, False)
+            if not self._Board[self.__GetIndexOfSquare(reference)].ContainsKotla():
+                PointsForPieceCapture = self.__CalculatePieceCapturePoints(reference)
+                self.__UpdatePlayerScore(PointsForPieceCapture)
+                self._Board[self.__GetIndexOfSquare(reference)].RemovePiece()
+            reference+=10*self._CurrentPlayer.GetDirection()
+
     def PlayGame(self):
         GameOver = False
         while not GameOver:
             self.__DisplayState()
-            Reset=True
-            while Reset:
-                Choice = 0
-                SquareIsValid = False
-                while Choice < 1 or Choice > 3:
-                    Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
-                    if Choice == 9:
-                        self.__UseMoveOptionOffer()
-                        self.__DisplayState()
-                while not SquareIsValid:
-                    StartSquareReference = self.__GetSquareReference("containing the piece to move")
-                    SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
+            SquareIsValid = False
+            Choice = 0
+            while Choice < 1 or Choice > 3:
+                Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
+                if Choice == 9:
+                    self.__UseMoveOptionOffer()
+                    self.__DisplayState()
+                if ( not (Choice < 1 or Choice > 3) and not self._CurrentPlayer.ChoiceIsSahm(Choice) and self._CurrentPlayer.GetSahmUsed()):
+                    print('You have already used your sahm')
+                    Choice=10
+            while not SquareIsValid:
+                StartSquareReference = self.__GetSquareReference("containing the piece to move")
+                SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
+            if self._CurrentPlayer.ChoiceIsSahm(Choice):
+                self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
+                self.__CalculateSahmMove(StartSquareReference)
+                self._CurrentPlayer.SetSahmUsed(True)
+                print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
+            else:
                 SquareIsValid = False
                 while not SquareIsValid:
                     FinishSquareReference = self.__GetSquareReference("to move to")
                     SquareIsValid = self.__CheckSquareIsValid(FinishSquareReference, False)
                 MoveLegal = self._CurrentPlayer.CheckPlayerMove(Choice, StartSquareReference, FinishSquareReference)
-                YN=str(input('Do you want to confim this move? (y/n): '))
-                if YN.lower()=='y':
-                    Reset=False
-                if Reset:
-                    self._CurrentPlayer.ResetQueueBackAfterUndo()
-                    
-            if MoveLegal:
-                PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
-                self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
-                self._CurrentPlayer.UpdateQueueAfterMove(Choice)
-                self.__UpdateBoard(StartSquareReference, FinishSquareReference)
-                self.__UpdatePlayerScore(PointsForPieceCapture)
-                print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
+                if MoveLegal:
+                    PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
+                    self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
+                    self._CurrentPlayer.UpdateQueueAfterMove(Choice)
+                    self.__UpdateBoard(StartSquareReference, FinishSquareReference)
+                    self.__UpdatePlayerScore(PointsForPieceCapture)
+                    print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
             if self._CurrentPlayer.SameAs(self._Players[0]):
                 self._CurrentPlayer = self._Players[1]
             else:
@@ -205,6 +216,7 @@ class Dastan:
         self._Board[self.__GetIndexOfSquare(self._NoOfRows * 10 + (self._NoOfColumns // 2 + 1))].SetPiece(CurrentPiece)
 
     def __CreateMoveOptionOffer(self):
+        self._MoveOptionOffer.append('sahm')
         self._MoveOptionOffer.append("jazair")
         self._MoveOptionOffer.append("chowkidar")
         self._MoveOptionOffer.append("cuirassier")
@@ -280,6 +292,12 @@ class Dastan:
         NewMove = Move(0, -2 * Direction)
         NewMoveOption.AddToPossibleMoves(NewMove)
         return NewMoveOption
+    
+    def __CreateSahmMoveOption(self, Direction):
+        NewMoveOption = MoveOption("sahm")
+        NewMove = Move(0 * Direction, 0 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        return NewMoveOption
 
     def __CreateMoveOption(self, Name, Direction):
         if Name == "chowkidar":
@@ -290,10 +308,13 @@ class Dastan:
             return self.__CreateFaujdarMoveOption(Direction)
         elif Name == "jazair":
             return self.__CreateJazairMoveOption(Direction)
+        elif Name == 'sahm':
+            return self.__CreateSahmMoveOption(Direction)
         else:
             return self.__CreateCuirassierMoveOption(Direction)
 
     def __CreateMoveOptions(self):
+        self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("sahm", 1))
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("ryott", 1))
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("chowkidar", 1))
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("cuirassier", 1))
@@ -304,6 +325,7 @@ class Dastan:
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("jazair", -1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("faujdar", -1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("cuirassier", -1))
+        self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("sahm", -1))
 
 class Piece:
     def __init__(self, T, B, P, S):
@@ -411,7 +433,6 @@ class Move:
 class MoveOptionQueue:
     def __init__(self):
         self.__Queue = []
-        self.__PreviosQueue = []
 
     def GetQueueAsString(self):
         QueueAsString = ""
@@ -422,21 +443,15 @@ class MoveOptionQueue:
         return QueueAsString
 
     def Add(self, NewMoveOption):
-        self.__PreviosQueue=copy.deepcopy(self.__Queue)
         self.__Queue.append(NewMoveOption)
 
     def Replace(self, Position, NewMoveOption):
-        self.__PreviosQueue=copy.deepcopy(self.__Queue)
         self.__Queue[Position] = NewMoveOption
 
     def MoveItemToBack(self, Position):
-        self.__PreviosQueue=copy.deepcopy(self.__Queue)
         Temp = self.__Queue[Position]
         self.__Queue.pop(Position)
         self.__Queue.append(Temp)
-        
-    def ResetQueueBack(self):
-        self.__Queue=copy.deepcopy(self.__PreviosQueue)
 
     def GetMoveOptionInPosition(self, Pos):
         return self.__Queue[Pos]
@@ -447,6 +462,7 @@ class Player:
         self.__Name = N
         self.__Direction = D
         self.__Queue = MoveOptionQueue()
+        self.__SahmUsed=False
 
     def SameAs(self, APlayer):
         if APlayer is None:
@@ -467,9 +483,18 @@ class Player:
 
     def UpdateMoveOptionQueueWithOffer(self, Position, NewMoveOption):
         self.__Queue.Replace(Position, NewMoveOption)
+        
+    def GetSahmUsed(self):
+        return self.__SahmUsed
+    
+    def SetSahmUsed(self,v):
+        self.__SahmUsed=v
 
-    def ResetQueueBackAfterUndo(self):
-        self.__Queue.ResetQueueBack()
+    def ChoiceIsSahm(self,Choice):
+        if self.__Queue.GetMoveOptionInPosition(Choice - 1).GetName()=='sahm':
+            return True
+        else:
+            return False
     
     def GetScore(self):
         return self.__Score
