@@ -10,12 +10,8 @@ class Dastan:
         self._Board = []
         self._Players = []
         self._MoveOptionOffer = []
-        name1=str(input('Enter a name for Player 1: '))
-        name2=name1
-        while name2==name1:
-            name2=str(input("Enter a name for Player 2 that is different to Player 1's name: "))
-        self._Players.append(Player(name1, 1))
-        self._Players.append(Player(name2, -1))
+        self._Players.append(Player("Player One", 1))
+        self._Players.append(Player("Player Two", -1))
         self.__CreateMoveOptions()
         self._NoOfRows = R
         self._NoOfColumns = C
@@ -140,8 +136,13 @@ class Dastan:
             while Choice < 1 or Choice > 3:
                 Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
                 if Choice == 9:
-                    self.__UseMoveOptionOffer()
-                    self.__DisplayState()
+                    if self._CurrentPlayer.GetChoicesLeft()>0:
+                        self._CurrentPlayer.SetChoicesLeft(self._CurrentPlayer.GetChoicesLeft()-1)
+                        self.__UseMoveOptionOffer()
+                        self.__DisplayState()
+                        print('You have '+str(self._CurrentPlayer.GetChoicesLeft())+' choices left')
+                    else:
+                        print('You have no choices left')
             while not SquareIsValid:
                 StartSquareReference = self.__GetSquareReference("containing the piece to move")
                 SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
@@ -435,6 +436,7 @@ class Player:
         self.__Name = N
         self.__Direction = D
         self.__Queue = MoveOptionQueue()
+        self.__ChoicesLeft = 3
 
     def SameAs(self, APlayer):
         if APlayer is None:
@@ -443,6 +445,12 @@ class Player:
             return True
         else:
             return False
+        
+    def GetChoicesLeft(self):
+        return self.__ChoicesLeft
+    
+    def SetChoicesLeft(self,v):
+        self.__ChoicesLeft=v
 
     def GetPlayerStateAsString(self):
         return self.__Name + "\n" + "Score: " + str(self.__Score) + "\n" + "Move option queue: " + self.__Queue.GetQueueAsString() + "\n"

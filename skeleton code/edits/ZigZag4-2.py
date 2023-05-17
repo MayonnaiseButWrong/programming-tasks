@@ -10,12 +10,8 @@ class Dastan:
         self._Board = []
         self._Players = []
         self._MoveOptionOffer = []
-        name1=str(input('Enter a name for Player 1: '))
-        name2=name1
-        while name2==name1:
-            name2=str(input("Enter a name for Player 2 that is different to Player 1's name: "))
-        self._Players.append(Player(name1, 1))
-        self._Players.append(Player(name2, -1))
+        self._Players.append(Player("Player One", 1))
+        self._Players.append(Player("Player Two", -1))
         self.__CreateMoveOptions()
         self._NoOfRows = R
         self._NoOfColumns = C
@@ -131,17 +127,29 @@ class Dastan:
             return self._Board[self.__GetIndexOfSquare(FinishSquareReference)].GetPieceInSquare().GetPointsIfCaptured()
         return 0
 
+    def __AwardWafr(self,Player):
+        if Player.GetWafrAwarded()==False:
+            if random.choice([True,False,False,False]):  #making sure its a 25% chance
+                Player.SetWafrAwarded(True)
+                return True
+        return False
+
     def PlayGame(self):
         GameOver = False
         while not GameOver:
             self.__DisplayState()
             SquareIsValid = False
             Choice = 0
-            while Choice < 1 or Choice > 3:
-                Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
-                if Choice == 9:
-                    self.__UseMoveOptionOffer()
-                    self.__DisplayState()
+            if self.__AwardWafr(self._CurrentPlayer):
+                print('You have been Awarded The Wafr!!!')
+                while Choice < 1 or Choice > 5:
+                    Choice = int(input("Choose move option to use from queue (1 to 5): "))
+            else:
+                while Choice < 1 or Choice > 3:
+                    Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
+                    if Choice == 9:
+                        self.__UseMoveOptionOffer()
+                        self.__DisplayState()
             while not SquareIsValid:
                 StartSquareReference = self.__GetSquareReference("containing the piece to move")
                 SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
@@ -435,7 +443,14 @@ class Player:
         self.__Name = N
         self.__Direction = D
         self.__Queue = MoveOptionQueue()
+        self.__WafrAwarded = False
 
+    def GetWafrAwarded(self):
+        return self.__WafrAwarded
+    
+    def SetWafrAwarded(self,V):
+        self.__WafrAwarded=V
+    
     def SameAs(self, APlayer):
         if APlayer is None:
             return False

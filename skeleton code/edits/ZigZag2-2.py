@@ -10,12 +10,8 @@ class Dastan:
         self._Board = []
         self._Players = []
         self._MoveOptionOffer = []
-        name1=str(input('Enter a name for Player 1: '))
-        name2=name1
-        while name2==name1:
-            name2=str(input("Enter a name for Player 2 that is different to Player 1's name: "))
-        self._Players.append(Player(name1, 1))
-        self._Players.append(Player(name2, -1))
+        self._Players.append(Player("Player One", 1))
+        self._Players.append(Player("Player Two", -1))
         self.__CreateMoveOptions()
         self._NoOfRows = R
         self._NoOfColumns = C
@@ -200,6 +196,7 @@ class Dastan:
         self._Board[self.__GetIndexOfSquare(self._NoOfRows * 10 + (self._NoOfColumns // 2 + 1))].SetPiece(CurrentPiece)
 
     def __CreateMoveOptionOffer(self):
+        self._MoveOptionOffer.append("faris")
         self._MoveOptionOffer.append("jazair")
         self._MoveOptionOffer.append("chowkidar")
         self._MoveOptionOffer.append("cuirassier")
@@ -275,6 +272,26 @@ class Dastan:
         NewMove = Move(0, -2 * Direction)
         NewMoveOption.AddToPossibleMoves(NewMove)
         return NewMoveOption
+    
+    def __CreateFarisMoveOption(self, Direction):
+        NewMoveOption = MoveOption("faris")
+        NewMove = Move(2 * Direction, 1 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        NewMove = Move(1 * Direction, 2 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        NewMove = Move(-2 * Direction, 1 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        NewMove = Move(1 * Direction, -2 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        NewMove = Move(2 * Direction, -1 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        NewMove = Move(-1 * Direction, 2 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        NewMove = Move(-2 * Direction, -1 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        NewMove = Move(-1 * Direction, -2 * Direction)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        return NewMoveOption
 
     def __CreateMoveOption(self, Name, Direction):
         if Name == "chowkidar":
@@ -285,10 +302,13 @@ class Dastan:
             return self.__CreateFaujdarMoveOption(Direction)
         elif Name == "jazair":
             return self.__CreateJazairMoveOption(Direction)
+        elif Name == 'faris':
+            return self.__CreateFarisMoveOption(Direction)
         else:
             return self.__CreateCuirassierMoveOption(Direction)
 
     def __CreateMoveOptions(self):
+        self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("faris", 1))
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("ryott", 1))
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("chowkidar", 1))
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("cuirassier", 1))
@@ -299,6 +319,7 @@ class Dastan:
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("jazair", -1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("faujdar", -1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("cuirassier", -1))
+        self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("faris", -1))
 
 class Piece:
     def __init__(self, T, B, P, S):

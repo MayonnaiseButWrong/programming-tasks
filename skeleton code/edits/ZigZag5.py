@@ -161,10 +161,10 @@ class Dastan:
                 print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
             if self._CurrentPlayer.SameAs(self._Players[0]):
                 self._CurrentPlayer = self._Players[1]
-                self._OtherPlayer = self._Player[0]
+                self._OtherPlayer = self._Players[0]
             else:
                 self._CurrentPlayer = self._Players[0]
-                self._OtherPlayer = self._Player[-1]
+                self._OtherPlayer = self._Players[-1]
             GameOver = self.__CheckIfGameOver()
         self.__DisplayState()
         self.__DisplayFinalResult()

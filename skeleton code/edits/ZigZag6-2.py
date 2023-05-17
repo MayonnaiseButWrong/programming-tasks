@@ -10,12 +10,8 @@ class Dastan:
         self._Board = []
         self._Players = []
         self._MoveOptionOffer = []
-        name1=str(input('Enter a name for Player 1: '))
-        name2=name1
-        while name2==name1:
-            name2=str(input("Enter a name for Player 2 that is different to Player 1's name: "))
-        self._Players.append(Player(name1, 1))
-        self._Players.append(Player(name2, -1))
+        self._Players.append(Player("Player One", 1))
+        self._Players.append(Player("Player Two", -1))
         self.__CreateMoveOptions()
         self._NoOfRows = R
         self._NoOfColumns = C
@@ -112,7 +108,12 @@ class Dastan:
         return SelectedSquare
 
     def __UseMoveOptionOffer(self):
-        ReplaceChoice = int(input("Choose the move option from your queue to replace (1 to 5): "))
+        ReplaceChoice=0
+        while ReplaceChoice < 1 or ReplaceChoice > 5:
+            ReplaceChoice = int(input("Choose the move option from your queue to replace (1 to 5): "))
+            if ReplaceChoice < 1 or ReplaceChoice > 5:
+                print('choice is not valid')
+                print('you must choose a position between 1 and 5')
         self._CurrentPlayer.UpdateMoveOptionQueueWithOffer(ReplaceChoice - 1, self.__CreateMoveOption(self._MoveOptionOffer[self._MoveOptionOfferPosition], self._CurrentPlayer.GetDirection()))
         self._CurrentPlayer.ChangeScore(-(10 - (ReplaceChoice * 2)))
         self._MoveOptionOfferPosition = random.randint(0, 4)
@@ -142,14 +143,25 @@ class Dastan:
                 if Choice == 9:
                     self.__UseMoveOptionOffer()
                     self.__DisplayState()
+                elif Choice < 1 or Choice > 3:
+                    print('the choice is not valid')
+                    print('you must enter a choice between 1 and 3')
             while not SquareIsValid:
                 StartSquareReference = self.__GetSquareReference("containing the piece to move")
                 SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
+                if not SquareIsValid:
+                    print('please choose a square inside the board, and choose a square containing a piece')
             SquareIsValid = False
-            while not SquareIsValid:
+            MoveLegal = False
+            while not SquareIsValid or not MoveLegal:
                 FinishSquareReference = self.__GetSquareReference("to move to")
                 SquareIsValid = self.__CheckSquareIsValid(FinishSquareReference, False)
-            MoveLegal = self._CurrentPlayer.CheckPlayerMove(Choice, StartSquareReference, FinishSquareReference)
+                if not SquareIsValid:
+                    print('please choose a square inside the board, and choose a square containing a piece')
+                else:
+                    MoveLegal = self._CurrentPlayer.CheckPlayerMove(Choice, StartSquareReference, FinishSquareReference)
+                    if not MoveLegal:
+                        print('please choose a legal ending square')
             if MoveLegal:
                 PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
                 self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))

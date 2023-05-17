@@ -10,12 +10,8 @@ class Dastan:
         self._Board = []
         self._Players = []
         self._MoveOptionOffer = []
-        name1=str(input('Enter a name for Player 1: '))
-        name2=name1
-        while name2==name1:
-            name2=str(input("Enter a name for Player 2 that is different to Player 1's name: "))
-        self._Players.append(Player(name1, 1))
-        self._Players.append(Player(name2, -1))
+        self._Players.append(Player("Player One", 1))
+        self._Players.append(Player("Player Two", -1))
         self.__CreateMoveOptions()
         self._NoOfRows = R
         self._NoOfColumns = C
