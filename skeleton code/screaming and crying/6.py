@@ -20,7 +20,6 @@ class Dastan:
         self.__CreateBoard()
         self.__CreatePieces(NoOfPieces)
         self._CurrentPlayer = self._Players[0]
-        self._WeatherEvent=WeatherEvent()
 
     def __DisplayBoard(self):
         print("\n" + "   ", end="")
@@ -104,10 +103,17 @@ class Dastan:
                     Player2HasMirza = True
         return not (Player1HasMirza and Player2HasMirza)
 
-    def __GetSquareReference(self, Description):
+    def __GetSquareReference(self, Description,StartSquare):
         SelectedSquare = int(input("Enter the square " + Description + " (row number followed by column number): "))
-        return SelectedSquare
+#edit
+        return self.__GetValidInt(SelectedSquare,Description,StartSquare)
 
+    def __GetValidInt(self,ins,description,StartSquare):
+        while not self.__CheckSquareIsValid(ins,StartSquare):
+            print('please input a valid square')
+            ins = int(input("Enter the square " + description + " (row number followed by column number): "))
+        return ins
+#edit
     def __UseMoveOptionOffer(self):
         ReplaceChoice = int(input("Choose the move option from your queue to replace (1 to 5): "))
         self._CurrentPlayer.UpdateMoveOptionQueueWithOffer(ReplaceChoice - 1, self.__CreateMoveOption(self._MoveOptionOffer[self._MoveOptionOfferPosition], self._CurrentPlayer.GetDirection()))
@@ -128,53 +134,29 @@ class Dastan:
             return self._Board[self.__GetIndexOfSquare(FinishSquareReference)].GetPieceInSquare().GetPointsIfCaptured()
         return 0
 
-    def __WeatherEventOccurs(self):
-        if random.choice([False,True]):
-            return True,random.randint(1,self._NoOfColumns)+10*random.randint(1,self._NoOfRows)
-        else:
-            return False,0
-
-    def __CalculateWeatherEvent(self):
-        x=self._WeatherEvent.GetWeatherLocation()%10
-        for y in range(1,self._NoOfRows+1):
-            self._Board[self.__GetIndexOfSquare(y*10+x)].RemovePiece()
-
     def PlayGame(self):
         GameOver = False
         while not GameOver:
             self.__DisplayState()
             SquareIsValid = False
             Choice = 0
-            EventOccurs,EventLocation=self.__WeatherEventOccurs()
-            if (not self._WeatherEvent.IsOccuring()) and EventOccurs:
-                self._WeatherEvent.SetWeatherLocation(EventLocation)
-                self._WeatherEvent.ResetCountDown
-                print('== Alert ===============================================================================================================================')
-                print('There is a weather event at '+str(self._WeatherEvent.GetWeatherLocation())+', all pieces in this column will be destryed in 2 moves if they are not removed')
-                print('========================================================================================================================================')
-                print()
             while Choice < 1 or Choice > 3:
                 Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
                 if Choice == 9:
                     self.__UseMoveOptionOffer()
                     self.__DisplayState()
+#edit
+            StartSquareReference = self.__GetSquareReference("containing the piece to move",True)
             while not SquareIsValid:
-                StartSquareReference = self.__GetSquareReference("containing the piece to move")
-                SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
-            SquareIsValid = False
-            while not SquareIsValid:
-                FinishSquareReference = self.__GetSquareReference("to move to")
-                SquareIsValid = self.__CheckSquareIsValid(FinishSquareReference, False)
-            MoveLegal = self._CurrentPlayer.CheckPlayerMove(Choice, StartSquareReference, FinishSquareReference)
-            if MoveLegal:
-                PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
-                self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
-                self._CurrentPlayer.UpdateQueueAfterMove(Choice)
-                self.__UpdateBoard(StartSquareReference, FinishSquareReference)
-                self.__UpdatePlayerScore(PointsForPieceCapture)
-                print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
-            if self._WeatherEvent.CountDownComplete():
-                self.__CalculateWeatherEvent()
+                FinishSquareReference = self.__GetSquareReference("to move to",False)
+                SquareIsValid = self._CurrentPlayer.CheckPlayerMove(Choice, StartSquareReference, FinishSquareReference)
+            PointsForPieceCapture = self.__CalculatePieceCapturePoints(FinishSquareReference)
+            self._CurrentPlayer.ChangeScore(-(Choice + (2 * (Choice - 1))))
+            self._CurrentPlayer.UpdateQueueAfterMove(Choice)
+            self.__UpdateBoard(StartSquareReference, FinishSquareReference)
+            self.__UpdatePlayerScore(PointsForPieceCapture)
+            print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
+#edit
             if self._CurrentPlayer.SameAs(self._Players[0]):
                 self._CurrentPlayer = self._Players[1]
             else:
@@ -409,33 +391,6 @@ class MoveOption:
             if StartRow + M.GetRowChange() == FinishRow and StartColumn + M.GetColumnChange() == FinishColumn:
                 return True
         return False
-
-
-class WeatherEvent:
-    def __init__(self):
-        self._x=0
-        self._y=0
-        self._countdown=-1
-
-    def CountDownComplete(self):
-        if self._countdown==0:
-            return True
-        else:
-            self._countdown-=1
-            return False
-        
-    def ResetCountDown(self):
-        self._countdown=2
-
-    def GetWeatherLocation(self):
-        return self._y*10+self._x
-
-    def SetWeatherLocation(self,v):
-        self._y,self._x=v//10,v%10
-
-    def IsOccuring(self):
-        return True if self._countdown>0 else False
-        
 
 class Move:
     def __init__(self, R, C):

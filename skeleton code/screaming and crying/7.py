@@ -20,7 +20,6 @@ class Dastan:
         self.__CreateBoard()
         self.__CreatePieces(NoOfPieces)
         self._CurrentPlayer = self._Players[0]
-        self._WeatherEvent=WeatherEvent()
 
     def __DisplayBoard(self):
         print("\n" + "   ", end="")
@@ -128,36 +127,23 @@ class Dastan:
             return self._Board[self.__GetIndexOfSquare(FinishSquareReference)].GetPieceInSquare().GetPointsIfCaptured()
         return 0
 
-    def __WeatherEventOccurs(self):
-        if random.choice([False,True]):
-            return True,random.randint(1,self._NoOfColumns)+10*random.randint(1,self._NoOfRows)
-        else:
-            return False,0
-
-    def __CalculateWeatherEvent(self):
-        x=self._WeatherEvent.GetWeatherLocation()%10
-        for y in range(1,self._NoOfRows+1):
-            self._Board[self.__GetIndexOfSquare(y*10+x)].RemovePiece()
-
     def PlayGame(self):
         GameOver = False
         while not GameOver:
             self.__DisplayState()
             SquareIsValid = False
             Choice = 0
-            EventOccurs,EventLocation=self.__WeatherEventOccurs()
-            if (not self._WeatherEvent.IsOccuring()) and EventOccurs:
-                self._WeatherEvent.SetWeatherLocation(EventLocation)
-                self._WeatherEvent.ResetCountDown
-                print('== Alert ===============================================================================================================================')
-                print('There is a weather event at '+str(self._WeatherEvent.GetWeatherLocation())+', all pieces in this column will be destryed in 2 moves if they are not removed')
-                print('========================================================================================================================================')
-                print()
             while Choice < 1 or Choice > 3:
                 Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
                 if Choice == 9:
-                    self.__UseMoveOptionOffer()
-                    self.__DisplayState()
+#edit
+                    if self._CurrentPlayer.GetChoiceOptionsLeft()>0:
+                        self.__UseMoveOptionOffer()
+                        self._CurrentPlayer.DecreaseChoiceOptionsLeft()
+                        self.__DisplayState()
+                    else:
+                        print('You have run out of choice options for this game ')
+#edit
             while not SquareIsValid:
                 StartSquareReference = self.__GetSquareReference("containing the piece to move")
                 SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
@@ -173,8 +159,6 @@ class Dastan:
                 self.__UpdateBoard(StartSquareReference, FinishSquareReference)
                 self.__UpdatePlayerScore(PointsForPieceCapture)
                 print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
-            if self._WeatherEvent.CountDownComplete():
-                self.__CalculateWeatherEvent()
             if self._CurrentPlayer.SameAs(self._Players[0]):
                 self._CurrentPlayer = self._Players[1]
             else:
@@ -410,33 +394,6 @@ class MoveOption:
                 return True
         return False
 
-
-class WeatherEvent:
-    def __init__(self):
-        self._x=0
-        self._y=0
-        self._countdown=-1
-
-    def CountDownComplete(self):
-        if self._countdown==0:
-            return True
-        else:
-            self._countdown-=1
-            return False
-        
-    def ResetCountDown(self):
-        self._countdown=2
-
-    def GetWeatherLocation(self):
-        return self._y*10+self._x
-
-    def SetWeatherLocation(self,v):
-        self._y,self._x=v//10,v%10
-
-    def IsOccuring(self):
-        return True if self._countdown>0 else False
-        
-
 class Move:
     def __init__(self, R, C):
         self._RowChange = R
@@ -480,6 +437,9 @@ class Player:
         self.__Name = N
         self.__Direction = D
         self.__Queue = MoveOptionQueue()
+#edit
+        self.__ChoiceOptionsLeft = 3
+#edit
 
     def SameAs(self, APlayer):
         if APlayer is None:
@@ -490,7 +450,7 @@ class Player:
             return False
 
     def GetPlayerStateAsString(self):
-        return self.__Name + "\n" + "Score: " + str(self.__Score) + "\n" + "Move option queue: " + self.__Queue.GetQueueAsString() + "\n"
+        return self.__Name + "\n" + 'Choice options left: ' + str(self.__ChoiceOptionsLeft) + "\n"  + "Score: " + str(self.__Score) + "\n" + "Move option queue: " + self.__Queue.GetQueueAsString() + "\n"
 
     def AddToMoveOptionQueue(self, NewMoveOption):
         self.__Queue.Add(NewMoveOption)
@@ -500,7 +460,13 @@ class Player:
 
     def UpdateMoveOptionQueueWithOffer(self, Position, NewMoveOption):
         self.__Queue.Replace(Position, NewMoveOption)
+#edit
+    def GetChoiceOptionsLeft(self):
+        return self.__ChoiceOptionsLeft
 
+    def DecreaseChoiceOptionsLeft(self):
+        self.__ChoiceOptionsLeft-=1
+#edit
     def GetScore(self):
         return self.__Score
 

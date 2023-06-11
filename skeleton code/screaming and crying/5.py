@@ -19,8 +19,10 @@ class Dastan:
         self.__CreateMoveOptionOffer()
         self.__CreateBoard()
         self.__CreatePieces(NoOfPieces)
+#edit
         self._CurrentPlayer = self._Players[0]
-        self._WeatherEvent=WeatherEvent()
+        self._OtherPlayer = self._Players[1]
+#edit
 
     def __DisplayBoard(self):
         print("\n" + "   ", end="")
@@ -128,36 +130,25 @@ class Dastan:
             return self._Board[self.__GetIndexOfSquare(FinishSquareReference)].GetPieceInSquare().GetPointsIfCaptured()
         return 0
 
-    def __WeatherEventOccurs(self):
-        if random.choice([False,True]):
-            return True,random.randint(1,self._NoOfColumns)+10*random.randint(1,self._NoOfRows)
-        else:
-            return False,0
-
-    def __CalculateWeatherEvent(self):
-        x=self._WeatherEvent.GetWeatherLocation()%10
-        for y in range(1,self._NoOfRows+1):
-            self._Board[self.__GetIndexOfSquare(y*10+x)].RemovePiece()
-
     def PlayGame(self):
         GameOver = False
         while not GameOver:
             self.__DisplayState()
             SquareIsValid = False
             Choice = 0
-            EventOccurs,EventLocation=self.__WeatherEventOccurs()
-            if (not self._WeatherEvent.IsOccuring()) and EventOccurs:
-                self._WeatherEvent.SetWeatherLocation(EventLocation)
-                self._WeatherEvent.ResetCountDown
-                print('== Alert ===============================================================================================================================')
-                print('There is a weather event at '+str(self._WeatherEvent.GetWeatherLocation())+', all pieces in this column will be destryed in 2 moves if they are not removed')
-                print('========================================================================================================================================')
-                print()
             while Choice < 1 or Choice > 3:
-                Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer: "))
+#edit
+                Choice = int(input("Choose move option to use from queue (1 to 3) or 9 to take the offer or 8 to peak at the opponent's Move Option Queue: "))
+#edit
                 if Choice == 9:
                     self.__UseMoveOptionOffer()
                     self.__DisplayState()
+#edit
+                elif Choice == 8:
+                    print(self._OtherPlayer.GetJustQueue())
+                    self._CurrentPlayer.ChangeScore(-(5))
+                    print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
+#edit
             while not SquareIsValid:
                 StartSquareReference = self.__GetSquareReference("containing the piece to move")
                 SquareIsValid = self.__CheckSquareIsValid(StartSquareReference, True)
@@ -173,12 +164,12 @@ class Dastan:
                 self.__UpdateBoard(StartSquareReference, FinishSquareReference)
                 self.__UpdatePlayerScore(PointsForPieceCapture)
                 print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
-            if self._WeatherEvent.CountDownComplete():
-                self.__CalculateWeatherEvent()
             if self._CurrentPlayer.SameAs(self._Players[0]):
                 self._CurrentPlayer = self._Players[1]
+                self._OtherPlayer = self._Players[0]
             else:
                 self._CurrentPlayer = self._Players[0]
+                self._OtherPlayer = self._Players[1]
             GameOver = self.__CheckIfGameOver()
         self.__DisplayState()
         self.__DisplayFinalResult()
@@ -410,33 +401,6 @@ class MoveOption:
                 return True
         return False
 
-
-class WeatherEvent:
-    def __init__(self):
-        self._x=0
-        self._y=0
-        self._countdown=-1
-
-    def CountDownComplete(self):
-        if self._countdown==0:
-            return True
-        else:
-            self._countdown-=1
-            return False
-        
-    def ResetCountDown(self):
-        self._countdown=2
-
-    def GetWeatherLocation(self):
-        return self._y*10+self._x
-
-    def SetWeatherLocation(self,v):
-        self._y,self._x=v//10,v%10
-
-    def IsOccuring(self):
-        return True if self._countdown>0 else False
-        
-
 class Move:
     def __init__(self, R, C):
         self._RowChange = R
@@ -500,7 +464,11 @@ class Player:
 
     def UpdateMoveOptionQueueWithOffer(self, Position, NewMoveOption):
         self.__Queue.Replace(Position, NewMoveOption)
-
+#edit
+    def GetJustQueue(self):
+        print()
+        return self.__Name + "\n" + "Move option queue: " + self.__Queue.GetQueueAsString() + "\n"
+#edit
     def GetScore(self):
         return self.__Score
 
