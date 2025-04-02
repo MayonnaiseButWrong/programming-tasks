@@ -1,6 +1,4 @@
-#input = str(input("enter text here:"))
-input = "one hundred and twenty three"
-#input = "one hundred and twenty three thousand four hundred and fifty six"
+input = str(input("enter text here:"))
 
 def single_digit_and_teens_and_tens(input):
     if input == "zero":
@@ -118,9 +116,12 @@ for word in ins_list:
         continue
     num = single_digit_and_teens_and_tens(word)
     pv = place_values(word)
-    if pv is not None:
-        output_number += num * pv
-    else:
-        output_number += num
-        
+    if num is not None:
+        cache += num
+    elif pv is not None:
+        cache *= pv
+        if pv > 100:
+            output_number += cache
+            cache = 0
+output_number += cache
 print(output_number)
